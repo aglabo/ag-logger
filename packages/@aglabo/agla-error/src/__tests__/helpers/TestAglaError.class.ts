@@ -29,12 +29,13 @@ export class TestAglaError extends AglaError {
   }
 
   /**
-   * Creates a new TestAglaError that chains this error with a causing error.
-   * Uses the parent AglaError chain method and casts the result to TestAglaError.
-   * @param cause - The error that caused this error
-   * @returns New TestAglaError instance with chained error information
+   * Overrides chain method to add custom message formatting.
+   * Adds "[TEST]" prefix to demonstrate inheritance type safety.
    */
-  chain(cause: Error): TestAglaError {
-    return super.chain(cause) as TestAglaError;
+  chain(cause: Error): this {
+    // カスタムメッセージフォーマット
+    this.message = `[TEST] ${this.message}`;
+    // 親クラスのchain処理を呼び出し
+    return super.chain(cause);
   }
 }

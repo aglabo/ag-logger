@@ -33,9 +33,9 @@ describe('Given AglaError method chaining', () => {
       const causeError = new Error('Cause message');
       const chainedError = originalError.chain(causeError);
 
-      expect(chainedError.message).toBe('Original message (caused by: Cause message)');
+      expect(chainedError.message).toBe('[TEST] Original message (caused by: Cause message)');
       expect(chainedError.errorType).toBe('TEST_ERROR');
-      expect(chainedError).not.toBe(originalError);
+      expect(chainedError).toBe(originalError);
       expect(chainedError).toBeInstanceOf(TestAglaError);
     });
 
@@ -58,11 +58,11 @@ describe('Given AglaError method chaining', () => {
     });
 
     // Test: Immutability - returns new instance
-    it('Then 正常系：should return new error instance', () => {
+    it('Then 正常系：should return same error instance', () => {
       const originalError = new TestAglaError('TEST_ERROR', 'Original message');
       const causeError = new Error('Cause message');
       const chainedError = originalError.chain(causeError);
-      expect(chainedError).not.toBe(originalError);
+      expect(chainedError).toBe(originalError);
       expect(chainedError).toBeInstanceOf(TestAglaError);
     });
   });
@@ -93,7 +93,7 @@ describe('Given AglaError method chaining', () => {
       const originalError = new TestAglaError('TEST_ERROR', 'Original message');
       const stringCause = 'string error' as unknown as Error;
       const stringChainedError = originalError.chain(stringCause);
-      expect(stringChainedError.message).toBe('Original message (caused by: undefined)');
+      expect(stringChainedError.message).toBe('[TEST] Original message (caused by: undefined)');
     });
 
     // Test: Object cause handling via message property extraction
@@ -101,7 +101,7 @@ describe('Given AglaError method chaining', () => {
       const originalError = new TestAglaError('TEST_ERROR', 'Original message');
       const objectCause = { message: 'object error message' } as unknown as Error;
       const chainedError = originalError.chain(objectCause);
-      expect(chainedError.message).toBe('Original message (caused by: object error message)');
+      expect(chainedError.message).toBe('[TEST] Original message (caused by: object error message)');
     });
   });
 });
