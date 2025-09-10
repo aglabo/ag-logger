@@ -7,7 +7,7 @@
 // https://opensource.org/licenses/MIT
 
 // base error class
-import { AglaError } from './AglaError.types';
+import { AglaError } from '@aglabo/agla-error';
 
 // Error Messages
 import type { TErrorType } from '../constants/agErrorMessages';

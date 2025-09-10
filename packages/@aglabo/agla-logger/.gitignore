@@ -46,10 +46,8 @@ $~*
 
 ###	AI Agent
 # claude code
-**/.claude/*
 .claude/*
-!.claude/commands
-!.claude/commands/*
+
 
 # CLAUDE Memory file
 !CLAUDE*.md

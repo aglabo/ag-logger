@@ -6,10 +6,14 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
+// vitest
 import { describe, expect, it } from 'vitest';
+
+// external lib
+import type { AglaError } from '@aglabo/agla-error';
+
 import { AG_LOGLEVEL } from '../../shared/types';
 import type { AgFormatFunction, AgLoggerOptions, AgLogLevel, AgLogMessage } from '../../shared/types';
-import type { AglaError } from '../../shared/types';
 import { AgLoggerError } from '../../shared/types';
 
 /**
@@ -151,7 +155,7 @@ describe('AgLogger Type System', () => {
       });
 
       it('should accept full options configuration', () => {
-        const mockLogger = (): void => {};
+        const mockLogger = (): void => { };
         const mockFormatter = (msg: AgLogMessage): string => msg.message;
 
         const options: AgLoggerOptions = {
@@ -171,7 +175,7 @@ describe('AgLogger Type System', () => {
         };
 
         const options2: AgLoggerOptions = {
-          defaultLogger: (): void => {},
+          defaultLogger: (): void => { },
         };
 
         const options3: AgLoggerOptions = {
@@ -234,7 +238,7 @@ describe('AgLogger Type System', () => {
           message: 'Base error message',
           errorType: 'VALIDATION',
           name: 'BaseError',
-        };
+        } as unknown as AglaError;
 
         expect(error.message).toBe('Base error message');
         expect(error.errorType).toBe('VALIDATION');
@@ -270,7 +274,7 @@ describe('AgLogger Type System', () => {
 
         const options: AgLoggerOptions = {
           logLevel,
-          defaultLogger: (): void => {},
+          defaultLogger: (): void => { },
           formatter: (msg: AgLogMessage): string => `[${msg.logLevel}] ${msg.message}`,
         };
 

@@ -74,7 +74,7 @@ class _AglaErrorOptions {
   readonly code?: string;
   readonly severity?: ErrorSeverity;
   readonly timestamp?: Date;
-  readonly context?: AglaErrorContext;
+  context?: AglaErrorContext; // overwrite context, if error chain
   readonly cause?: string;
 
   /**
@@ -112,7 +112,7 @@ class _AglaErrorOptions {
  */
 export abstract class AglaError extends Error {
   /** Internal options containing all error properties */
-  private readonly _options: _AglaErrorOptions;
+  private _options: _AglaErrorOptions;
 
   /** Gets the error type identifying the specific type of error. */
   get errorType(): string {
@@ -137,6 +137,10 @@ export abstract class AglaError extends Error {
   /** Gets the optional context information providing additional details about the error. */
   get context(): AglaErrorContext | undefined {
     return this._options.context;
+  }
+
+  set context(context: AglaErrorContext) {
+    this._options.context = context;
   }
 
   /**
@@ -203,11 +207,11 @@ export abstract class AglaError extends Error {
    * Combines error messages and preserves context information.
    *
    * @param cause - The error that caused this error
-   * @returns New AglaError instance with chained error information
+   * @returns this AglaError instance with chained error information
    */
-  chain(cause: Error): AglaError {
-    const chainedMessage = `${this.message} (caused by: ${cause.message})`;
-    const chainedContext = {
+  chain(cause: Error): this {
+    this.message = `${this.message} (caused by: ${cause.message})`;
+    this.context = {
       ...this.context,
       cause: cause.message,
       originalError: {
@@ -216,15 +220,6 @@ export abstract class AglaError extends Error {
         stack: cause.stack,
       },
     };
-
-    // 同じ具象クラスのインスタンスを作成
-    return new (this.constructor as AglaErrorConstructor)(
-      this.errorType,
-      chainedMessage,
-      {
-        ...this._options,
-        context: chainedContext,
-      },
-    );
+    return this;
   }
 }

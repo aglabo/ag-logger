@@ -6,7 +6,6 @@
 // https://opensource.org/licenses/MIT
 
 // Error classes
-export { AglaError } from './AglaError.types';
 export { AgLoggerError } from './AgLoggerError.types';
 
 // Constants and enums
