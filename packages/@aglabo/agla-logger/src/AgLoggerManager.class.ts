@@ -16,6 +16,7 @@ import { AG_LOGGER_ERROR_MESSAGES, ERROR_TYPES } from '../shared/constants/agErr
 import { NullLogger } from './plugins/logger/NullLogger';
 
 // AgLogger
+import { ErrorSeverity } from '@aglabo/agla-error';
 import { AgLogger } from './AgLogger.class';
 
 /**
@@ -43,6 +44,7 @@ export class AgLoggerManager {
   static createManager(options?: AgLoggerOptions): AgLoggerManager {
     if (AgLoggerManager.instance !== undefined) {
       throw new AgLoggerError(
+        ErrorSeverity.FATAL,
         ERROR_TYPES.INITIALIZATION,
         AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.INITIALIZATION].LOGGER_ALREADY_CREATED,
       );
@@ -64,6 +66,7 @@ export class AgLoggerManager {
   static getManager(): AgLoggerManager {
     if (AgLoggerManager.instance === undefined) {
       throw new AgLoggerError(
+        ErrorSeverity.FATAL,
         ERROR_TYPES.INITIALIZATION,
         AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.INITIALIZATION].LOGGER_NOT_CREATED,
       );
@@ -81,6 +84,7 @@ export class AgLoggerManager {
   getLogger(): AgLogger {
     if (this.logger === undefined) {
       throw new AgLoggerError(
+        ErrorSeverity.FATAL,
         ERROR_TYPES.INITIALIZATION,
         AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.INITIALIZATION].LOGGER_NOT_CREATED,
       );
@@ -98,6 +102,7 @@ export class AgLoggerManager {
   setLogger(logger: AgLogger): void {
     if (this.logger !== undefined) {
       throw new AgLoggerError(
+        ErrorSeverity.FATAL,
         ERROR_TYPES.INITIALIZATION,
         AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.INITIALIZATION].LOGGER_ALREADY_INITIALIZED,
       );
@@ -121,6 +126,7 @@ export class AgLoggerManager {
   setLoggerConfig(options: AgLoggerOptions): void {
     if (this.logger === undefined) {
       throw new AgLoggerError(
+        ErrorSeverity.FATAL,
         ERROR_TYPES.INITIALIZATION,
         AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.INITIALIZATION].LOGGER_NOT_CREATED,
       );
@@ -140,6 +146,7 @@ export class AgLoggerManager {
   bindLoggerFunction(level: AgLogLevel, fn: AgLoggerFunction): boolean {
     if (this.logger === undefined) {
       throw new AgLoggerError(
+        ErrorSeverity.FATAL,
         ERROR_TYPES.INITIALIZATION,
         AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.INITIALIZATION].LOGGER_NOT_CREATED,
       );
@@ -158,6 +165,7 @@ export class AgLoggerManager {
   updateLoggerMap(map: Partial<AgLoggerMap<AgLoggerFunction>>): void {
     if (this.logger === undefined) {
       throw new AgLoggerError(
+        ErrorSeverity.FATAL,
         ERROR_TYPES.INITIALIZATION,
         AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.INITIALIZATION].LOGGER_NOT_CREATED,
       );
@@ -186,6 +194,7 @@ export class AgLoggerManager {
   removeLoggerFunction(level: AgLogLevel): void {
     if (this.logger === undefined) {
       throw new AgLoggerError(
+        ErrorSeverity.FATAL,
         ERROR_TYPES.INITIALIZATION,
         AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.INITIALIZATION].LOGGER_NOT_CREATED,
       );

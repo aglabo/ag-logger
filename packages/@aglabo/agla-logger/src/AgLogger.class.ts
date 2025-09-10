@@ -21,6 +21,7 @@ import { AgLoggerConfig } from './internal/AgLoggerConfig.class';
 import type { AgMockFormatter } from './plugins/formatter/AgMockFormatter';
 import { ConsoleLogger, ConsoleLoggerMap } from './plugins/logger/ConsoleLogger';
 // utils
+import { ErrorSeverity } from '@aglabo/agla-error';
 import { AgLoggerGetMessage } from './utils/AgLoggerGetMessage';
 import { isStandardLogLevel, isValidLogger, validateFormatter, validateLogLevel } from './utils/AgLogValidators';
 
@@ -74,6 +75,7 @@ export class AgLogger {
   static getLogger(): AgLogger {
     if (!this._instance) {
       throw new AgLoggerError(
+        ErrorSeverity.FATAL,
         ERROR_TYPES.INITIALIZATION,
         AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.INITIALIZATION].LOGGER_NOT_CREATED,
       );
@@ -92,6 +94,7 @@ export class AgLogger {
     // Validate options is not null or undefined first (runtime safety for type-erased environments)
     if ((options as unknown) === null || (options as unknown) === undefined) {
       throw new AgLoggerError(
+        ErrorSeverity.ERROR,
         ERROR_TYPES.VALIDATION,
         AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.VALIDATION].NULL_CONFIGURATION,
       );
@@ -103,6 +106,7 @@ export class AgLogger {
     if ('defaultLogger' in options) {
       if (!isValidLogger(options.defaultLogger)) {
         throw new AgLoggerError(
+          ErrorSeverity.ERROR,
           ERROR_TYPES.CONFIG,
           AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.CONFIG].INVALID_DEFAULT_LOGGER,
         );
@@ -116,6 +120,7 @@ export class AgLogger {
     if ('logLevel' in options) {
       if (!isStandardLogLevel(options.logLevel)) {
         throw new AgLoggerError(
+          ErrorSeverity.ERROR,
           ERROR_TYPES.VALIDATION,
           AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.VALIDATION].SPECIAL_LOG_LEVEL_NOT_ALLOWED,
         );
@@ -128,6 +133,7 @@ export class AgLogger {
       // Check if the failure was due to special log level
       // Generic configuration error for other validation failures
       throw new AgLoggerError(
+        ErrorSeverity.ERROR,
         ERROR_TYPES.CONFIG,
         AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.CONFIG].INVALID_CONFIG,
       );
@@ -223,6 +229,7 @@ export class AgLogger {
     // Special log levels (VERBOSE, LOG, DEFAULT) cannot be set as default log level
     if (!isStandardLogLevel(validatedLogLevel)) {
       throw new AgLoggerError(
+        ErrorSeverity.ERROR,
         ERROR_TYPES.VALIDATION,
         AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.VALIDATION].SPECIAL_LOG_LEVEL_NOT_ALLOWED,
       );

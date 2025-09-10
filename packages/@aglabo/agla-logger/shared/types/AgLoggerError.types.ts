@@ -8,6 +8,7 @@
 
 // base error class
 import { AglaError } from '@aglabo/agla-error';
+import type { AglaErrorContext, AglaErrorOptions, ErrorSeverity } from '@aglabo/agla-error';
 
 // Error Messages
 import type { TErrorType } from '../constants/agErrorMessages';
@@ -49,7 +50,13 @@ export class AgLoggerError extends AglaError {
    * @param message - The human-readable error message
    * @param context - Optional context information for debugging
    */
-  constructor(errorType: TErrorType, message: string, context?: Record<string, unknown>) {
-    super(errorType, message, context);
+  constructor(severity: ErrorSeverity, errorType: TErrorType, message: string, context?: AglaErrorContext) {
+    const options: AglaErrorOptions = {
+      code: errorType,
+      severity: severity,
+      timestamp: new Date(),
+      context: context,
+    };
+    super(errorType, message, options);
   }
 }

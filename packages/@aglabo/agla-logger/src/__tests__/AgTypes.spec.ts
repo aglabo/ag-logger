@@ -10,7 +10,7 @@
 import { describe, expect, it } from 'vitest';
 
 // external lib
-import type { AglaError } from '@aglabo/agla-error';
+import { type AglaError, ErrorSeverity } from '@aglabo/agla-error';
 
 import { AG_LOGLEVEL } from '../../shared/types';
 import type { AgFormatFunction, AgLoggerOptions, AgLogLevel, AgLogMessage } from '../../shared/types';
@@ -155,7 +155,7 @@ describe('AgLogger Type System', () => {
       });
 
       it('should accept full options configuration', () => {
-        const mockLogger = (): void => { };
+        const mockLogger = (): void => {};
         const mockFormatter = (msg: AgLogMessage): string => msg.message;
 
         const options: AgLoggerOptions = {
@@ -175,7 +175,7 @@ describe('AgLogger Type System', () => {
         };
 
         const options2: AgLoggerOptions = {
-          defaultLogger: (): void => { },
+          defaultLogger: (): void => {},
         };
 
         const options3: AgLoggerOptions = {
@@ -196,7 +196,7 @@ describe('AgLogger Type System', () => {
   describe('AgLoggerError: Error handling type system', () => {
     describe('エラー構造の検証', () => {
       it('should create AgLoggerError with required properties', () => {
-        const error = new AgLoggerError('VALIDATION', 'Test error');
+        const error = new AgLoggerError(ErrorSeverity.ERROR, 'VALIDATION', 'Test error');
 
         expect(error).toBeInstanceOf(Error);
         expect(error).toBeInstanceOf(AgLoggerError);
@@ -206,7 +206,7 @@ describe('AgLogger Type System', () => {
       });
 
       it('should inherit from Error properly', () => {
-        const error = new AgLoggerError('VALIDATION', 'Test error');
+        const error = new AgLoggerError(ErrorSeverity.ERROR, 'VALIDATION', 'Test error');
 
         expect(error.stack).toBeDefined();
         expect(typeof error.stack).toBe('string');
@@ -217,6 +217,7 @@ describe('AgLogger Type System', () => {
 
         errorTypes.forEach((errorType) => {
           const error = new AgLoggerError(
+            ErrorSeverity.ERROR,
             errorType as 'VALIDATION' | 'CONFIG' | 'INITIALIZATION',
             `Error: ${errorType}`,
           );
@@ -246,7 +247,7 @@ describe('AgLogger Type System', () => {
       });
 
       it('should be compatible with AgLoggerError', () => {
-        const agLoggerError = new AgLoggerError('RESOURCE', 'Logger error');
+        const agLoggerError = new AgLoggerError(ErrorSeverity.ERROR, 'RESOURCE', 'Logger error');
         const agError: AglaError = agLoggerError;
 
         expect(agError.message).toBe('Logger error');
@@ -274,7 +275,7 @@ describe('AgLogger Type System', () => {
 
         const options: AgLoggerOptions = {
           logLevel,
-          defaultLogger: (): void => { },
+          defaultLogger: (): void => {},
           formatter: (msg: AgLogMessage): string => `[${msg.logLevel}] ${msg.message}`,
         };
 
@@ -285,7 +286,7 @@ describe('AgLogger Type System', () => {
       it('should handle error scenarios with proper typing', () => {
         const createTypedError = (level: unknown): AgLoggerError | null => {
           if (typeof level !== 'number') {
-            return new AgLoggerError('VALIDATION', `Invalid log level: ${String(level)}`);
+            return new AgLoggerError(ErrorSeverity.ERROR, 'VALIDATION', `Invalid log level: ${String(level)}`);
           }
           return null;
         };

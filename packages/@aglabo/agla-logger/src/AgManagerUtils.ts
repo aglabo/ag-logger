@@ -1,6 +1,7 @@
 // src/AgManagerUtils.ts
 // AgLoggerManager 用のユーティリティ関数(createManager, getLogger) と初期化(setupManager)
 
+import { ErrorSeverity } from '@aglabo/agla-error';
 import { AG_LOGGER_ERROR_MESSAGES, ERROR_TYPES } from '../shared/constants/agErrorMessages';
 import type { AgLoggerOptions } from '../shared/types/AgLogger.interface';
 import { AgLoggerError } from '../shared/types/AgLoggerError.types';
@@ -23,6 +24,7 @@ export const getLogger = (): AgLogger => {
       return manager.getLogger();
     } catch {
       throw new AgLoggerError(
+        ErrorSeverity.FATAL,
         ERROR_TYPES.INITIALIZATION,
         AG_LOGGER_ERROR_MESSAGES[ERROR_TYPES.INITIALIZATION].LOGGER_NOT_CREATED,
       );
