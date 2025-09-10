@@ -1,7 +1,7 @@
-# src: lefthook.yml
-## @(#) : lefthook config
+# src: ./lefthook.yml
+# @(#) : lefthook configuration for git hooks
 #
-# Copyright (c) 2025 atsushifx <http://github.com/atsushifx>
+# Copyright (c) 2025 atsushifx <https://github.com/atsushifx>
 #
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
@@ -10,7 +10,7 @@ pre-commit:
   parallel: true
   commands:
     gitleaks:
-      run: gitleaks protect --config ./configs/gitleaks.toml --staged
+        run: gitleaks protect --config ./configs/gitleaks.toml --staged
 
     secretlint:
       glob: "**/*"
@@ -18,13 +18,48 @@ pre-commit:
         secretlint
         --secretlintrc ./configs/secretlint.config.yaml
         --secretlintignore .gitignore
-        --maskSecrets
         "{staged_files}"
+
+    eslint:
+      glob:
+        - "shared/**/*.ts"
+        - "packages/**/*.ts"
+      run: pnpm run lint-all -- {staged_files}
+
+    eslint-types:
+      glob:
+        - "shared/**/*.ts"
+        - "packages/**/*.ts"
+      run: pnpm run lint-all:types -- "{staged_files}"
+
+    lint-files:
+      glob:
+        - "**/*.ts"
+        - "scripts/**/*"
+      run: pnpm run lint:filenames -- {staged_files}
+
+    check-spells:
+      glob:
+        - "/shared/**/*.ts"
+        - "/packages/**/*.ts"
+        - "/shared/**/*.md"
+        - "/packages/**/*.md"
+        - "**/*.json"
+        - "docs/**/*.md"
+      run: pnpm run check:spells -- {staged_files}
+
+    check-format:
+      glob:
+        - "**/*.ts"
+        - "**/*.js"
+        - "**/*.json"
+        - "**/*.md"
+      run: dprint check {staged_files}
 
 prepare-commit-msg:
   commands:
     prepare-by-codegpt:
-      run: bash -c './scripts/prepare-commit-msg.sh'
+      run: bash -c 'scripts/prepare-commit-msg.sh'
 
 commit-msg:
   parallel: true
