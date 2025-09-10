@@ -12,7 +12,7 @@ import type { TestContext } from 'vitest';
 
 // 共有定数: ログレベル定義
 import { AG_LOGLEVEL } from '@shared/types';
-import type { AgLogMessage } from '@shared/types';
+import type { AgLoggerOptions, AgLogMessage } from '@shared/types';
 
 // テスト対象: AgLoggerとエントリーポイント
 import { AgLogger } from '@/AgLogger.class';
@@ -271,6 +271,243 @@ describe('Mock Output Plugin Combination Integration', () => {
         const lastMessage = mockLogger.getLastMessage() as AgLogMessage;
         expect(mockLogger.getMessageCount()).toBe(1);
         expect(lastMessage.message).toBe('second message');
+      });
+    });
+  });
+
+  /**
+   * Given: プラグイン初期化エッジケースが存在する場合
+   * When: プラグイン初期化時に予期しない状況が発生した時
+   * Then: 適切なエラー処理と復旧が実行される
+   */
+  describe('Given plugin initialization edge cases', () => {
+    describe('When plugins fail during initialization phase', () => {
+      // 目的: フォーマッター実行時失敗の適切なエラーハンドリング
+      it('Then should handle formatter execution failures gracefully - 異常系', () => {
+        setupTestContext();
+
+        // Given: 実行時失敗するフォーマッター + 正常ロガー組み合わせ
+        const errorFormatter = (): never => {
+          throw new Error('Formatter execution failed');
+        };
+
+        // When: 実行時失敗フォーマッターでLogger作成・使用
+        const mockLoggerInstance = new MockLogger.buffer();
+        const logger = AgLogger.createLogger({
+          defaultLogger: mockLoggerInstance.getLoggerFunction(),
+          formatter: errorFormatter,
+        });
+        logger.logLevel = AG_LOGLEVEL.INFO;
+
+        // Then: ログ実行時にフォーマッターエラーが発生
+        expect(() => {
+          logger.info('test message');
+        }).toThrow('Formatter execution failed');
+
+        // Then: システム状態は清浄に保たれる
+        expect(AgLogger.getLogger()).toBeDefined(); // デフォルトロガーは利用可能
+      });
+
+      // 目的: ロガー初期化失敗時の適切なエラーハンドリング
+      it('Then should handle logger initialization failures gracefully - 異常系', () => {
+        const { mockFormatter } = setupTestContext();
+
+        // Given: 初期化失敗するロガー + 正常フォーマッター組み合わせ
+        const errorLogger = (): void => {
+          throw new Error('Logger initialization failed');
+        };
+
+        // When: 初期化失敗ロガーでLogger作成
+        const logger = AgLogger.createLogger({
+          defaultLogger: errorLogger,
+          formatter: mockFormatter,
+        });
+        logger.logLevel = AG_LOGLEVEL.INFO;
+
+        // Then: フォーマッター初期化は成功してもログ出力時にエラー
+        expect(() => {
+          logger.info('test message');
+        }).toThrow('Logger initialization failed');
+      });
+
+      // 目的: 複合実行時失敗パターンでの堅牢性
+      it('Then should maintain system robustness with compound execution failures - エッジケース', () => {
+        setupTestContext();
+
+        // Given: 複数の実行時失敗が重複する環境
+        const errorFormatter = (): never => {
+          throw new Error('Formatter exec error');
+        };
+        const errorLogger = (): void => {
+          throw new Error('Logger exec error');
+        };
+
+        // When: 複合実行時失敗でLogger作成・使用
+        const logger = AgLogger.createLogger({
+          defaultLogger: errorLogger,
+          formatter: errorFormatter,
+        });
+        logger.logLevel = AG_LOGLEVEL.INFO;
+
+        // Then: ログ実行時にフォーマッターエラーが先に発生
+        expect(() => {
+          logger.info('test message');
+        }).toThrow('Formatter exec error');
+
+        // Then: システム全体の安定性維持（新しいクリーンなインスタンスで確認）
+        AgLogger.resetSingleton(); // シングルトン状態をリセット
+        const fallbackLogger = AgLogger.createLogger();
+        expect(fallbackLogger).toBeDefined();
+        expect(() => {
+          fallbackLogger.info('fallback test');
+        }).not.toThrow();
+      });
+    });
+
+    describe('When plugin configuration inconsistencies occur', () => {
+      // 目的: 設定オブジェクト不整合検出と修正
+      it('Then should detect and handle configuration inconsistencies - 正常系', () => {
+        const { mockLogger, mockFormatter } = setupTestContext();
+
+        // Given: 基本設定でLogger作成
+        const logger = AgLogger.createLogger({
+          defaultLogger: mockLogger.getLoggerFunction(),
+          formatter: mockFormatter,
+        });
+        logger.logLevel = AG_LOGLEVEL.INFO;
+
+        // When: 不整合な設定変更を試行
+        expect(() => {
+          logger.setLoggerConfig({
+            defaultLogger: undefined as AgLoggerOptions['defaultLogger'], // 不正な設定
+          });
+        }).toThrow(); // 設定バリデーションでエラー
+
+        // Then: 既存設定は保持される
+        logger.info('test after invalid config');
+        expect(mockLogger.getMessageCount()).toBe(1);
+        expect(mockLogger.getLastMessage()).toBeDefined();
+      });
+
+      // 目的: ランタイム設定変更時の整合性維持
+      it('Then should maintain consistency during runtime configuration changes - エッジケース', () => {
+        const { mockLogger } = setupTestContext();
+        const secondMockLogger = new MockLogger.buffer();
+
+        // Given: 動的設定変更が可能なLogger
+        const logger = AgLogger.createLogger({
+          defaultLogger: mockLogger.getLoggerFunction(),
+          formatter: MockFormatter.passthrough,
+        });
+        logger.logLevel = AG_LOGLEVEL.INFO;
+
+        // When: ランタイム設定変更（ロガー置換）
+        logger.info('message 1');
+        logger.setLoggerConfig({
+          defaultLogger: secondMockLogger.getLoggerFunction(),
+        });
+        logger.info('message 2');
+
+        // Then: 各設定期間でのメッセージが適切に分離される
+        expect(mockLogger.getMessageCount()).toBe(1);
+        expect(secondMockLogger.getMessageCount()).toBe(1);
+
+        const firstMessage = mockLogger.getLastMessage() as AgLogMessage;
+        const secondMessage = secondMockLogger.getLastMessage() as AgLogMessage;
+        expect(firstMessage.message).toBe('message 1');
+        expect(secondMessage.message).toBe('message 2');
+      });
+
+      // 目的: プラグイン依存関係エッジケース処理
+      it('Then should handle plugin dependency resolution edge cases - エッジケース', () => {
+        setupTestContext();
+
+        // Given: 循環依存的な設定パターン
+        const configMockLogger = new MockLogger.buffer();
+        const selfReferencingConfig = {
+          defaultLogger: configMockLogger.getLoggerFunction(),
+          formatter: MockFormatter.json,
+        };
+
+        // When: 複雑な依存関係でLogger構成
+        const logger = AgLogger.createLogger(selfReferencingConfig);
+        logger.logLevel = AG_LOGLEVEL.INFO;
+
+        // Then: 依存関係は適切に解決される
+        expect(() => {
+          logger.info('dependency test', { complex: { nested: { data: true } } });
+        }).not.toThrow();
+
+        // Then: 設定参照は正しく解決される（内部設定は非公開のため動作確認）
+        expect(() => {
+          logger.info('dependency test', { complex: { nested: { data: true } } });
+        }).not.toThrow();
+        expect(typeof logger.getLoggerFunction).toBe('function');
+      });
+    });
+
+    describe('When plugin state management encounters edge cases', () => {
+      // 目的: プラグイン状態リセット時の一貫性
+      it('Then should maintain plugin state consistency during resets - 正常系', () => {
+        const { mockLogger, mockFormatter } = setupTestContext();
+
+        // Given: 状態を持つプラグイン組み合わせ
+        const logger = AgLogger.createLogger({
+          defaultLogger: mockLogger.getLoggerFunction(),
+          formatter: mockFormatter,
+        });
+        logger.logLevel = AG_LOGLEVEL.INFO;
+
+        // When: 複数回の状態変更とリセット
+        logger.info('message 1');
+        mockLogger.reset();
+        logger.info('message 2');
+        AgLogger.resetSingleton();
+
+        // Then: 状態リセット後は初期状態に戻る
+        expect(mockLogger.getMessageCount()).toBe(1); // reset後のメッセージのみ
+        const resetMessage = mockLogger.getLastMessage() as AgLogMessage;
+        expect(resetMessage.message).toBe('message 2');
+      });
+
+      // 目的: プラグイン置換時のメモリ管理
+      it('Then should handle plugin replacement memory management - エッジケース', () => {
+        setupTestContext();
+
+        // Given: メモリ集約的なプラグイン構成
+        const heavyDataLogger = new MockLogger.buffer();
+        const logger = AgLogger.createLogger({
+          defaultLogger: heavyDataLogger.getLoggerFunction(),
+          formatter: MockFormatter.json,
+        });
+        logger.logLevel = AG_LOGLEVEL.DEBUG;
+
+        // When: 大量データでプラグイン使用後、置換
+        for (let i = 0; i < 100; i++) {
+          logger.debug('Heavy data', { iteration: i, data: 'x'.repeat(1000) });
+        }
+
+        const newLogger = new MockLogger.buffer();
+        logger.setLoggerConfig({
+          defaultLogger: newLogger.getLoggerFunction(),
+        });
+
+        // Then: 置換後は新しいプラグインが使用される
+        logger.info('after replacement');
+        expect(heavyDataLogger.getMessageCount()).toBe(100);
+        expect(newLogger.getMessageCount()).toBe(1);
+
+        // デバッグ: メッセージの取得方法を確認
+        const messages = newLogger.getMessages();
+        expect(messages).toHaveLength(1);
+
+        // 適切な方法でメッセージを取得
+        if (messages[0] && typeof messages[0] === 'object' && 'message' in messages[0]) {
+          expect(messages[0].message).toBe('after replacement');
+        } else {
+          // メッセージが文字列形式の場合
+          expect(messages[0]).toContain('after replacement');
+        }
       });
     });
   });

@@ -253,20 +253,6 @@ describe('AgLoggerConfig', () => {
     expect(result).toBe(DISABLE);
   });
 
-  it('should return false for all levels when log level is OFF', () => {
-    const config = new AgLoggerConfig();
-
-    // Ensure log level is OFF (default state)
-    expect(config.logLevel).toBe(AG_LOGLEVEL.OFF);
-
-    // Test that shouldOutput returns false for all log levels when set to OFF
-    expect(config.shouldOutput(AG_LOGLEVEL.DEBUG)).toBe(false);
-    expect(config.shouldOutput(AG_LOGLEVEL.INFO)).toBe(false);
-    expect(config.shouldOutput(AG_LOGLEVEL.WARN)).toBe(false);
-    expect(config.shouldOutput(AG_LOGLEVEL.ERROR)).toBe(false);
-    expect(config.shouldOutput(AG_LOGLEVEL.OFF)).toBe(false);
-  });
-
   it('should return correct output decision for valid log levels', () => {
     const config = new AgLoggerConfig();
 

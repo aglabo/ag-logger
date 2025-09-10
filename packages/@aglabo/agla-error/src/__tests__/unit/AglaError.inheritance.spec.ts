@@ -75,11 +75,16 @@ describe('Given AglaError inheritance and method overriding', () => {
       const originalError = new TestAglaError('MULTI_CHAIN', 'Base message');
 
       const level1 = originalError.chain(new Error('Level 1'));
+      // level1時点でのメッセージ状態をキャプチャ（mutable動作のため）
+      const level1Message = level1.message;
+
       const level2 = level1.chain(new Error('Level 2'));
+      // level2時点でのメッセージ状態をキャプチャ
+      const level2Message = level2.message;
 
       // 各チェーンでカスタムフォーマットが適用される
-      expect(level1.message).toBe('[TEST] Base message (caused by: Level 1)');
-      expect(level2.message).toBe('[TEST] [TEST] Base message (caused by: Level 1) (caused by: Level 2)');
+      expect(level1Message).toBe('[TEST] Base message (caused by: Level 1)');
+      expect(level2Message).toBe('[TEST] [TEST] Base message (caused by: Level 1) (caused by: Level 2)');
 
       // 型安全性が維持される
       expect(level2).toBe(originalError);

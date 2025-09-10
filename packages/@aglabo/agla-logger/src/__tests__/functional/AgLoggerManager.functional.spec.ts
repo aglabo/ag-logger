@@ -14,7 +14,7 @@ import { AgLoggerManager } from '../../AgLoggerManager.class';
 // AgLoggerクラス - 参照比較のため
 import { AgLogger } from '../../AgLogger.class';
 // 型定義 - 委譲テスト用
-import type { AgLoggerFunction, AgLoggerMap } from '../../../shared/types/AgLogger.interface';
+import type { AgLoggerFunction, AgLoggerMap, AgLoggerOptions } from '../../../shared/types/AgLogger.interface';
 import { AG_LOGLEVEL } from '../../../shared/types/AgLogLevel.types';
 
 /**
@@ -47,22 +47,29 @@ describe('AgLoggerManager', () => {
    * @description 未初期化状態でのエラー処理と二重初期化防止
    */
   describe('初期化ガード', () => {
-    // 最初のテストのみ作成（atsushifx式BDD厳格プロセス）
-    it('should throw error when getManager is called without initialization', () => {
-      expect(() => AgLoggerManager.getManager()).toThrow(/not created/i);
+    describe('Given: 未初期化状態のAgLoggerManager', () => {
+      describe('When: getManagerを呼び出す', () => {
+        it('Then: should throw error for uninitialized access - 異常系', () => {
+          expect(() => AgLoggerManager.getManager()).toThrow(/not created/i);
+        });
+      });
     });
 
-    // 2番目のテスト追加
-    it('should throw error when createManager is called twice', () => {
-      AgLoggerManager.createManager();
-      expect(() => AgLoggerManager.createManager()).toThrow(/already created/i);
-    });
+    describe('Given: 初期化済みAgLoggerManager', () => {
+      describe('When: createManagerを再度呼び出す', () => {
+        it('Then: should throw error for duplicate initialization - 異常系', () => {
+          AgLoggerManager.createManager();
+          expect(() => AgLoggerManager.createManager()).toThrow(/already created/i);
+        });
+      });
 
-    // 3番目のテスト追加（BDDカテゴリ1完了）
-    it('should return same reference when getManager is called after createManager', () => {
-      const manager1 = AgLoggerManager.createManager();
-      const manager2 = AgLoggerManager.getManager();
-      expect(manager1).toBe(manager2);
+      describe('When: 初期化後にgetManagerを呼び出す', () => {
+        it('Then: should return same reference as created manager - 正常系', () => {
+          const manager1 = AgLoggerManager.createManager();
+          const manager2 = AgLoggerManager.getManager();
+          expect(manager1).toBe(manager2);
+        });
+      });
     });
   });
 
@@ -72,26 +79,31 @@ describe('AgLoggerManager', () => {
    * @description AgLoggerインスタンスの生成と取得機能
    */
   describe('Logger の生成・取得', () => {
-    // 最初のテストのみ作成（atsushifx式BDD厳格プロセス）
-    it('should return non-undefined logger after createManager', () => {
-      const manager = AgLoggerManager.createManager();
-      const logger = manager.getLogger();
-      expect(logger).toBeDefined();
+    describe('Given: 初期化されたAgLoggerManager', () => {
+      describe('When: getLoggerを呼び出す', () => {
+        it('Then: should return defined logger instance - 正常系', () => {
+          const manager = AgLoggerManager.createManager();
+          const logger = manager.getLogger();
+          expect(logger).toBeDefined();
+        });
+
+        it('Then: should return same reference as AgLogger.getLogger - 正常系', () => {
+          AgLoggerManager.createManager();
+          const manager = AgLoggerManager.getManager();
+          const managerLogger = manager.getLogger();
+          const directLogger = AgLogger.getLogger();
+          expect(managerLogger).toBe(directLogger);
+        });
+      });
     });
 
-    // 2番目のテスト追加
-    it('should return same reference as AgLogger.getLogger', () => {
-      AgLoggerManager.createManager();
-      const manager = AgLoggerManager.getManager();
-      const managerLogger = manager.getLogger();
-      const directLogger = AgLogger.getLogger();
-      expect(managerLogger).toBe(directLogger);
-    });
-
-    // 3番目のテスト追加（BDDカテゴリ2完了）
-    it('should throw error when getLogger is called without initialization', () => {
-      AgLoggerManager.resetSingleton(); // Ensure no instance exists
-      expect(() => AgLoggerManager.getManager()).toThrow(/not created/i);
+    describe('Given: 未初期化状態のAgLoggerManager', () => {
+      describe('When: getLoggerアクセスを試行', () => {
+        it('Then: should throw error for uninitialized access - 異常系', () => {
+          AgLoggerManager.resetSingleton(); // Ensure no instance exists
+          expect(() => AgLoggerManager.getManager()).toThrow(/not created/i);
+        });
+      });
     });
   });
 
@@ -101,33 +113,38 @@ describe('AgLoggerManager', () => {
    * @description setLoggerメソッドによる外部インスタンス注入機能
    */
   describe('ロガーインスタンス注入', () => {
-    // 最初のテストのみ作成（atsushifx式BDD厳格プロセス）
-    it('should successfully create manager with external logger via createManager', () => {
-      AgLoggerManager.resetSingleton(); // Ensure clean state
+    describe('Given: クリーンな状態でのAgLoggerManager', () => {
+      describe('When: createManagerでマネージャーを作成', () => {
+        it('Then: should successfully create manager with logger - 正常系', () => {
+          AgLoggerManager.resetSingleton(); // Ensure clean state
 
-      expect(() => {
-        AgLoggerManager.createManager(); // Creates manager with logger
-        // setLogger would throw because manager already has a logger
-      }).not.toThrow();
+          expect(() => {
+            AgLoggerManager.createManager(); // Creates manager with logger
+            // setLogger would throw because manager already has a logger
+          }).not.toThrow();
+        });
+
+        it('Then: should return logger instance after creation - 正常系', () => {
+          AgLoggerManager.resetSingleton(); // Ensure clean state
+
+          const manager = AgLoggerManager.createManager();
+          const retrievedLogger = manager.getLogger();
+          expect(retrievedLogger).toBeInstanceOf(AgLogger);
+        });
+      });
     });
 
-    // 2番目のテスト追加
-    it('should return logger instance after manager creation', () => {
-      AgLoggerManager.resetSingleton(); // Ensure clean state
+    describe('Given: 初期化済みAgLoggerManager', () => {
+      describe('When: setLoggerで外部ロガーを注入を試行', () => {
+        it('Then: should throw error for already initialized manager - 異常系', () => {
+          const externalLogger = AgLogger.createLogger();
+          AgLoggerManager.resetSingleton(); // Ensure clean state
 
-      const manager = AgLoggerManager.createManager();
-      const retrievedLogger = manager.getLogger();
-      expect(retrievedLogger).toBeInstanceOf(AgLogger);
-    });
+          const manager = AgLoggerManager.createManager(); // Initialize manager with logger
 
-    // 3番目のテスト追加（BDDカテゴリ3完了）
-    it('should throw error when setLogger is called on initialized manager', () => {
-      const externalLogger = AgLogger.createLogger();
-      AgLoggerManager.resetSingleton(); // Ensure clean state
-
-      const manager = AgLoggerManager.createManager(); // Initialize manager with logger
-
-      expect(() => manager.setLogger(externalLogger)).toThrow(/already initialized/i);
+          expect(() => manager.setLogger(externalLogger)).toThrow(/already initialized/i);
+        });
+      });
     });
   });
 
@@ -137,23 +154,27 @@ describe('AgLoggerManager', () => {
    * @description resetSingleton等のテスト専用API動作
    */
   describe('廃棄（テスト専用API）', () => {
-    // 最初のテストのみ作成（atsushifx式BDD厳格プロセス）
-    it('should throw error when getManager is called after resetSingleton', () => {
-      AgLoggerManager.createManager();
-      AgLoggerManager.resetSingleton();
+    describe('Given: 初期化済みAgLoggerManager', () => {
+      describe('When: resetSingleton後にgetManagerを呼び出す', () => {
+        it('Then: should throw error for disposed manager access - 正常系', () => {
+          AgLoggerManager.createManager();
+          AgLoggerManager.resetSingleton();
 
-      expect(() => AgLoggerManager.getManager()).toThrow(/not created/i);
-    });
+          expect(() => AgLoggerManager.getManager()).toThrow(/not created/i);
+        });
+      });
 
-    // 2番目のテスト追加（BDDカテゴリ4完了）
-    it('should allow createManager after resetSingleton', () => {
-      AgLoggerManager.createManager();
-      AgLoggerManager.resetSingleton();
+      describe('When: resetSingleton後にcreateManagerを呼び出す', () => {
+        it('Then: should allow new manager creation after disposal - 正常系', () => {
+          AgLoggerManager.createManager();
+          AgLoggerManager.resetSingleton();
 
-      expect(() => {
-        const manager = AgLoggerManager.createManager();
-        expect(manager).toBeDefined();
-      }).not.toThrow();
+          expect(() => {
+            const manager = AgLoggerManager.createManager();
+            expect(manager).toBeDefined();
+          }).not.toThrow();
+        });
+      });
     });
   });
 
@@ -163,67 +184,73 @@ describe('AgLoggerManager', () => {
    * @description bindLoggerFunction等の委譲メソッドの動作
    */
   describe('委譲の成立（インタラクション）', () => {
-    // 最初のテストのみ作成（atsushifx式BDD厳格プロセス）
-    it('should call AgLogger.setLoggerFunction once when bindLoggerFunction is called', () => {
-      const manager = AgLoggerManager.createManager();
-      const logger = manager.getLogger();
-      const mockFunction: AgLoggerFunction = vi.fn();
+    describe('Given: 初期化済みAgLoggerManagerと委譲対象メソッド', () => {
+      describe('When: bindLoggerFunctionを呼び出す', () => {
+        it('Then: should call AgLogger.setLoggerFunction once - 正常系', () => {
+          const manager = AgLoggerManager.createManager();
+          const logger = manager.getLogger();
+          const mockFunction: AgLoggerFunction = vi.fn();
 
-      // AgLoggerのsetLoggerFunctionメソッドをスパイ
-      const setLoggerFunctionSpy = vi.spyOn(logger, 'setLoggerFunction');
+          // AgLoggerのsetLoggerFunctionメソッドをスパイ
+          const setLoggerFunctionSpy = vi.spyOn(logger, 'setLoggerFunction');
 
-      manager.bindLoggerFunction(AG_LOGLEVEL.INFO, mockFunction);
+          manager.bindLoggerFunction(AG_LOGLEVEL.INFO, mockFunction);
 
-      expect(setLoggerFunctionSpy).toHaveBeenCalledOnce();
-      expect(setLoggerFunctionSpy).toHaveBeenCalledWith(AG_LOGLEVEL.INFO, mockFunction);
-    });
+          expect(setLoggerFunctionSpy).toHaveBeenCalledOnce();
+          expect(setLoggerFunctionSpy).toHaveBeenCalledWith(AG_LOGLEVEL.INFO, mockFunction);
+        });
+      });
 
-    // 2番目のテスト追加
-    it('should call AgLogger.setLoggerConfig when updateLoggerMap is called', () => {
-      const manager = AgLoggerManager.createManager();
-      const logger = manager.getLogger();
-      const mockLoggerMap: Partial<AgLoggerMap<AgLoggerFunction>> = {
-        [AG_LOGLEVEL.ERROR]: vi.fn(),
-        [AG_LOGLEVEL.WARN]: vi.fn(),
-      };
+      describe('When: updateLoggerMapを呼び出す', () => {
+        it('Then: should call AgLogger.setLoggerConfig with loggerMap - 正常系', () => {
+          const manager = AgLoggerManager.createManager();
+          const logger = manager.getLogger();
+          const mockLoggerMap: Partial<AgLoggerMap<AgLoggerFunction>> = {
+            [AG_LOGLEVEL.ERROR]: vi.fn(),
+            [AG_LOGLEVEL.WARN]: vi.fn(),
+          };
 
-      // AgLoggerのsetLoggerConfigメソッドをスパイ
-      const setLoggerConfigSpy = vi.spyOn(logger, 'setLoggerConfig');
+          // AgLoggerのsetLoggerConfigメソッドをスパイ
+          const setLoggerConfigSpy = vi.spyOn(logger, 'setLoggerConfig');
 
-      manager.updateLoggerMap(mockLoggerMap);
+          manager.updateLoggerMap(mockLoggerMap);
 
-      expect(setLoggerConfigSpy).toHaveBeenCalledOnce();
-      expect(setLoggerConfigSpy).toHaveBeenCalledWith({ loggerMap: mockLoggerMap });
-    });
+          expect(setLoggerConfigSpy).toHaveBeenCalledOnce();
+          expect(setLoggerConfigSpy).toHaveBeenCalledWith({ loggerMap: mockLoggerMap });
+        });
+      });
 
-    // 3番目のテスト追加
-    it('should call AgLogger.setLoggerConfig when setLoggerConfig is called', () => {
-      const manager = AgLoggerManager.createManager();
-      const logger = manager.getLogger();
-      const mockOptions = { logLevel: AG_LOGLEVEL.DEBUG };
+      describe('When: setLoggerConfigを呼び出す', () => {
+        it('Then: should delegate to AgLogger.setLoggerConfig - 正常系', () => {
+          const manager = AgLoggerManager.createManager();
+          const logger = manager.getLogger();
+          const mockOptions = { logLevel: AG_LOGLEVEL.DEBUG };
 
-      // AgLoggerのsetLoggerConfigメソッドをスパイ
-      const setLoggerConfigSpy = vi.spyOn(logger, 'setLoggerConfig');
+          // AgLoggerのsetLoggerConfigメソッドをスパイ
+          const setLoggerConfigSpy = vi.spyOn(logger, 'setLoggerConfig');
 
-      manager.setLoggerConfig(mockOptions);
+          manager.setLoggerConfig(mockOptions);
 
-      expect(setLoggerConfigSpy).toHaveBeenCalledOnce();
-      expect(setLoggerConfigSpy).toHaveBeenCalledWith(mockOptions);
-    });
+          expect(setLoggerConfigSpy).toHaveBeenCalledOnce();
+          expect(setLoggerConfigSpy).toHaveBeenCalledWith(mockOptions);
+        });
+      });
 
-    // 4番目のテスト追加（BDDカテゴリ5完了）
-    it('should call AgLogger.setLoggerFunction when removeLoggerFunction is called', () => {
-      const manager = AgLoggerManager.createManager();
-      const logger = manager.getLogger();
+      describe('When: removeLoggerFunctionを呼び出す', () => {
+        it('Then: should call AgLogger.setLoggerFunction with NullLogger - 正常系', () => {
+          const manager = AgLoggerManager.createManager();
+          const logger = manager.getLogger();
 
-      // AgLoggerのsetLoggerFunctionメソッドをスパイ
-      const setLoggerFunctionSpy = vi.spyOn(logger, 'setLoggerFunction');
+          // AgLoggerのsetLoggerFunctionメソッドをスパイ
+          const setLoggerFunctionSpy = vi.spyOn(logger, 'setLoggerFunction');
 
-      manager.removeLoggerFunction(AG_LOGLEVEL.INFO);
+          manager.removeLoggerFunction(AG_LOGLEVEL.INFO);
 
-      expect(setLoggerFunctionSpy).toHaveBeenCalledOnce();
-      // NullLoggerで置換されることを確認
-      expect(setLoggerFunctionSpy).toHaveBeenCalledWith(AG_LOGLEVEL.INFO, expect.any(Function));
+          expect(setLoggerFunctionSpy).toHaveBeenCalledOnce();
+          // NullLoggerで置換されることを確認
+          expect(setLoggerFunctionSpy).toHaveBeenCalledWith(AG_LOGLEVEL.INFO, expect.any(Function));
+        });
+      });
     });
   });
 
@@ -233,9 +260,154 @@ describe('AgLoggerManager', () => {
    * @description 例外メッセージの正規表現テスト（仕様書120行目準拠）
    */
   describe('スレッショルド', () => {
-    // 最初のテストのみ作成（atsushifx式BDD厳格プロセス）
-    it('should throw error message matching /not created/i for uninitialized getManager', () => {
-      expect(() => AgLoggerManager.getManager()).toThrow(/not created/i);
+    describe('Given: 未初期化状態のAgLoggerManager', () => {
+      describe('When: getManagerを呼び出す', () => {
+        it('Then: should throw error message matching /not created/i - 異常系', () => {
+          expect(() => AgLoggerManager.getManager()).toThrow(/not created/i);
+        });
+      });
+    });
+  });
+
+  /**
+   * Core State Management Edge Cases
+   * Tests for Manager-Logger state synchronization and edge cases
+   */
+  describe('Manager状態管理エッジケース', () => {
+    describe('Given: Manager-Logger状態不整合シナリオ', () => {
+      describe('When: 複数のマネージャー操作を並行実行', () => {
+        it('Then: should maintain state consistency under concurrent operations - エッジケース', () => {
+          const manager = AgLoggerManager.createManager();
+          const logger = manager.getLogger();
+
+          // Simulate concurrent state changes
+          const operations = [
+            () => manager.setLoggerConfig({ logLevel: AG_LOGLEVEL.DEBUG }),
+            () => manager.bindLoggerFunction(AG_LOGLEVEL.INFO, vi.fn()),
+            () => manager.removeLoggerFunction(AG_LOGLEVEL.WARN),
+          ];
+
+          // Execute operations in sequence (simulating concurrent access patterns)
+          operations.forEach((op) => {
+            expect(() => op()).not.toThrow();
+          });
+
+          // Verify final state consistency
+          expect(logger.logLevel).toBe(AG_LOGLEVEL.DEBUG);
+        });
+      });
+
+      describe('When: Manager破棄後の状態確認', () => {
+        it('Then: should handle post-disposal access correctly - エッジケース', () => {
+          // Create manager and logger reference
+          const manager = AgLoggerManager.createManager();
+          const loggerRef = manager.getLogger();
+
+          // Dispose manager
+          AgLoggerManager.resetSingleton();
+
+          // Logger reference should still be functional
+          expect(() => {
+            loggerRef.info('test message after manager disposal');
+          }).not.toThrow();
+
+          // But manager access should fail
+          expect(() => AgLoggerManager.getManager()).toThrow(/not created/i);
+        });
+      });
+
+      describe('When: 設定オブジェクト変更検出', () => {
+        it('Then: should detect and handle configuration object mutations - エッジケース', () => {
+          const manager = AgLoggerManager.createManager();
+          const logger = manager.getLogger();
+
+          // Test configuration object mutations
+          const config: AgLoggerOptions = { logLevel: AG_LOGLEVEL.WARN };
+          manager.setLoggerConfig(config);
+          expect(logger.logLevel).toBe(AG_LOGLEVEL.WARN);
+
+          // Mutate original config object (should not affect logger)
+          config.logLevel = AG_LOGLEVEL.ERROR;
+          expect(logger.logLevel).toBe(AG_LOGLEVEL.WARN); // Should remain unchanged
+        });
+
+        it('Then: should handle null/undefined config mutations - エッジケース', () => {
+          const manager = AgLoggerManager.createManager();
+          const logger = manager.getLogger();
+
+          // Set initial config
+          const config: AgLoggerOptions = { logLevel: AG_LOGLEVEL.INFO };
+          manager.setLoggerConfig(config);
+          expect(logger.logLevel).toBe(AG_LOGLEVEL.INFO);
+
+          // Attempt to corrupt the config reference
+          (config as unknown as { logLevel: null; formatter: undefined }).logLevel = null;
+          (config as unknown as { logLevel: null; formatter: undefined }).formatter = undefined;
+
+          // Logger should maintain its state
+          expect(logger.logLevel).toBe(AG_LOGLEVEL.INFO);
+          expect(() => logger.info('test after config corruption')).not.toThrow();
+        });
+
+        it('Then: should handle config reference replacement - エッジケース', () => {
+          const manager = AgLoggerManager.createManager();
+
+          // Set initial config
+          const config1: AgLoggerOptions = { logLevel: AG_LOGLEVEL.DEBUG };
+          manager.setLoggerConfig(config1);
+          expect(manager.getLogger().logLevel).toBe(AG_LOGLEVEL.DEBUG);
+
+          // Replace with new config object
+          const config2: AgLoggerOptions = { logLevel: AG_LOGLEVEL.ERROR };
+          manager.setLoggerConfig(config2);
+          expect(manager.getLogger().logLevel).toBe(AG_LOGLEVEL.ERROR);
+
+          // Original config mutations should not affect current state
+          config1.logLevel = AG_LOGLEVEL.TRACE;
+          expect(manager.getLogger().logLevel).toBe(AG_LOGLEVEL.ERROR);
+        });
+      });
+
+      describe('When: Manager-Logger参照不一致', () => {
+        it('Then: should maintain consistent references after multiple operations - エッジケース', () => {
+          const manager = AgLoggerManager.createManager();
+          const logger1 = manager.getLogger();
+
+          // Perform multiple config changes
+          manager.setLoggerConfig({ logLevel: AG_LOGLEVEL.WARN });
+          const logger2 = manager.getLogger();
+
+          manager.setLoggerConfig({ logLevel: AG_LOGLEVEL.ERROR });
+          const logger3 = manager.getLogger();
+
+          // All logger references should be the same instance
+          expect(logger1).toBe(logger2);
+          expect(logger2).toBe(logger3);
+          expect(logger1.logLevel).toBe(AG_LOGLEVEL.ERROR);
+        });
+
+        it('Then: should handle concurrent access patterns - エッジケース', () => {
+          const manager = AgLoggerManager.createManager();
+
+          // Simulate concurrent access to logger and config changes
+          const loggers = Array.from({ length: 5 }, () => manager.getLogger());
+
+          // All should be the same reference
+          loggers.forEach((logger, index) => {
+            expect(logger).toBe(loggers[0]);
+            expect(() => logger.info(`concurrent test ${index}`)).not.toThrow();
+          });
+
+          // Config change during concurrent access
+          manager.setLoggerConfig({ logLevel: AG_LOGLEVEL.FATAL });
+
+          // All logger references should still work with new config
+          loggers.forEach((logger, index) => {
+            expect(logger.logLevel).toBe(AG_LOGLEVEL.FATAL);
+            expect(() => logger.fatal(`post-config test ${index}`)).not.toThrow();
+          });
+        });
+      });
     });
   });
 });

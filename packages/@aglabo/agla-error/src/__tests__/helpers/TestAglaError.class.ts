@@ -33,9 +33,30 @@ export class TestAglaError extends AglaError {
    * Adds "[TEST]" prefix to demonstrate inheritance type safety.
    */
   chain(cause: Error): this {
-    // カスタムメッセージフォーマット
+    // 親クラスのchain処理を先に呼び出し（cause部分を追加）
+    super.chain(cause);
+    // その後でカスタムフォーマットを適用
     this.message = `[TEST] ${this.message}`;
-    // 親クラスのchain処理を呼び出し
-    return super.chain(cause);
+    return this;
   }
+}
+
+/**
+ * Basic implementation of AglaError without method overrides.
+ * Used to test the base chain functionality without inheritance customization.
+ */
+export class BasicAglaError extends AglaError {
+  /**
+   * Creates a new BasicAglaError instance without any customization.
+   * This demonstrates using AglaError directly without overriding methods.
+   */
+  constructor(
+    errorType: string,
+    message: string,
+    options?: AglaErrorOptions,
+  ) {
+    super(errorType, message, options);
+  }
+
+  // 継承のみ、メソッドのオーバーライドなし
 }

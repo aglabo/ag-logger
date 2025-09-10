@@ -199,26 +199,8 @@ describe('MockFormatter.errorThrow - 統合テスト', () => {
       expect(instance.getStats().lastMessage?.args).toEqual(['test', 42]);
     });
 
-    it('長時間実行時の統計精度を確認', () => {
-      // Arrange
-      const FormatterClass = MockFormatter.errorThrow;
-      const instance = new FormatterClass(dummyRoutine);
-      const testMessage = createTestMessage();
-
-      // Act - 多数回実行
-      for (let i = 0; i < 100; i++) {
-        expect(() => instance.execute(testMessage)).toThrow('Default mock error');
-      }
-
-      // Assert - 統計が正確に記録される
-      expect(instance.getStats().callCount).toBe(100);
-      expect(instance.getStats().lastMessage).toEqual(testMessage);
-
-      // Act - リセット後の確認
-      instance.reset();
-      expect(instance.getStats().callCount).toBe(0);
-      expect(instance.getStats().lastMessage).toBeNull();
-    });
+    // Removed redundant statistical precision test - simple counter operations
+    // are adequately tested in other scenarios and don't add significant value
 
     it('同時実行時の動作確認（統計の整合性）', () => {
       // Arrange

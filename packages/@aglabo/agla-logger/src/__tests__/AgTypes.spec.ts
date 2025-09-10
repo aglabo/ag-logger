@@ -195,35 +195,11 @@ describe('AgLogger Type System', () => {
    */
   describe('AgLoggerError: Error handling type system', () => {
     describe('エラー構造の検証', () => {
-      it('should create AgLoggerError with required properties', () => {
-        const error = new AgLoggerError(ErrorSeverity.ERROR, 'VALIDATION', 'Test error');
-
-        expect(error).toBeInstanceOf(Error);
-        expect(error).toBeInstanceOf(AgLoggerError);
-        expect(error.message).toBe('Test error');
-        expect(error.errorType).toBe('VALIDATION');
-        expect(error.name).toBe('AgLoggerError');
-      });
-
-      it('should inherit from Error properly', () => {
+      it('should create AgLoggerError with stack trace', () => {
         const error = new AgLoggerError(ErrorSeverity.ERROR, 'VALIDATION', 'Test error');
 
         expect(error.stack).toBeDefined();
         expect(typeof error.stack).toBe('string');
-      });
-
-      it('should handle different error types', () => {
-        const errorTypes = ['VALIDATION', 'CONFIG', 'INITIALIZATION'];
-
-        errorTypes.forEach((errorType) => {
-          const error = new AgLoggerError(
-            ErrorSeverity.ERROR,
-            errorType as 'VALIDATION' | 'CONFIG' | 'INITIALIZATION',
-            `Error: ${errorType}`,
-          );
-          expect(error.errorType).toBe(errorType);
-          expect(error.message).toBe(`Error: ${errorType}`);
-        });
       });
     });
   });

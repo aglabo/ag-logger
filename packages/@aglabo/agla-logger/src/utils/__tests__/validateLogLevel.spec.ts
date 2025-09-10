@@ -242,3 +242,52 @@ describe('validateLogLevel: LogLevel validation with comprehensive error handlin
     });
   });
 });
+
+import { AgToLogLevel } from '../AgLogHelpers';
+
+// Additional test cases from edge-cases file integration
+describe('Integrated Edge Cases from AgLogValidators', () => {
+  describe('Given: Enhanced string validation with whitespace edge cases', () => {
+    const whitespaceValues = [
+      { name: 'spaces only', value: '   ' },
+      { name: 'tab only', value: '\t' },
+      { name: 'newline only', value: '\n' },
+      { name: 'mixed whitespace', value: '  \t\n  ' },
+      { name: 'padded number', value: ' 0 ' },
+      { name: 'tab padded', value: '\t1\t' },
+      { name: 'newline padded', value: '\n2\n' },
+    ];
+
+    whitespaceValues.forEach(({ name, value }) => {
+      it(`When: ${name} is validated Then: should throw AgLoggerError - エッジケース`, () => {
+        expect(() => validateLogLevel(value)).toThrow(AgLoggerError);
+        expect(() => validateLogLevel(value)).toThrow(/expected number/);
+      });
+    });
+  });
+
+  describe('Given: AgToLogLevel integration test', () => {
+    const validStringLevels = [
+      { name: 'uppercase ERROR', input: 'ERROR', expected: AG_LOGLEVEL.ERROR },
+      { name: 'lowercase warn', input: 'warn', expected: AG_LOGLEVEL.WARN },
+      { name: 'spaced INFO', input: ' INFO ', expected: AG_LOGLEVEL.INFO },
+      { name: 'lowercase debug', input: 'debug', expected: AG_LOGLEVEL.DEBUG },
+    ];
+
+    validStringLevels.forEach(({ name, input, expected }) => {
+      it(`When: ${name}(${input}) via AgToLogLevel Then: should validate correctly - 正常系`, () => {
+        const level = AgToLogLevel(input);
+        expect(level).toBeTypeOf('number');
+        expect(level).toBe(expected);
+        expect(validateLogLevel(level as number)).toBe(level);
+      });
+    });
+
+    it('When: all AG_LOGLEVEL values are validated Then: should accept all - 正常系', () => {
+      const allLevels = Object.values(AG_LOGLEVEL) as number[];
+      allLevels.forEach((level) => {
+        expect(validateLogLevel(level)).toBe(level);
+      });
+    });
+  });
+});
