@@ -1,4 +1,8 @@
-# @aglabo/ag-logger パッケージガイド
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## @aglabo/ag-logger パッケージガイド
 
 このファイルは、Claude Code (claude.ai/code) が@aglabo/ag-loggerパッケージでの作業時に参照するガイドです。
 
@@ -40,10 +44,17 @@ pnpm run lint:all          # コード品質チェック
 pnpm run build             # デュアルビルド（ESM+CJS+Types）
 
 # 4層テストシステム
-pnpm run test:unit         # 単体テスト
-pnpm run test:functional   # 機能テスト
-pnpm run test:integration  # 統合テスト
-pnpm run test:e2e         # E2Eテスト
+pnpm run test:unit         # 単体テスト（vitest unit config）
+pnpm run test:functional   # 機能テスト（vitest functional config）
+pnpm run test:integration  # 統合テスト（vitest integration config）
+pnpm run test:e2e         # E2Eテスト（vitest e2e config）
+
+# 包括テスト
+pnpm run test:all          # 全テスト層実行
+
+# 開発支援コマンド
+pnpm run clean             # ビルド成果物削除
+pnpm run sync:configs      # 設定ファイル同期
 ```
 
 ### 🏗️ コアアーキテクチャ概要
