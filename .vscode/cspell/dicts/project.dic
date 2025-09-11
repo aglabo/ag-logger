@@ -4,8 +4,10 @@ cjs
 CODEOWNERS
 esm
 ESM
+LOGLEVEL
 pimzino
 stringifiable
 stylelintcache
 tsup
 uvx
+परीक्षण
