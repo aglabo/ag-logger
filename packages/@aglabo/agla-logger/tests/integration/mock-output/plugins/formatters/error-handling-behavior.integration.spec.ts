@@ -17,25 +17,23 @@ import { MockFormatter } from '@/plugins/formatter/MockFormatter';
 // integration test
 import { AgLoggerConfig } from '@/internal/AgLoggerConfig.class';
 
+// 共通テストデータ（トップレベル配置: 複数Feature間で共有）
+const createTestMessage = (message = 'Test message'): AgLogMessage => ({
+  timestamp: new Date('2025-01-01T00:00:00.000Z'),
+  logLevel: AG_LOGLEVEL.INFO,
+  message,
+  args: [],
+});
+
+const dummyRoutine: AgFormatRoutine = (msg) => msg;
+
 /**
- * MockFormatter.errorThrow 統合テストスイート
- *
- * AgLoggerConfigとの連携テストと実際のロガー使用シナリオをテスト
- * atsushifx式BDD厳格プロセスに従い、統合レベルでの動作を確認
+ * MockFormatter.errorThrow 統合テストスイート（BDD: Feature/When/Then）
  */
-describe('MockFormatter.errorThrow - 統合テスト', () => {
-  // 共通テストデータ
-  const createTestMessage = (message = 'Test message'): AgLogMessage => ({
-    timestamp: new Date('2025-01-01T00:00:00.000Z'),
-    logLevel: AG_LOGLEVEL.INFO,
-    message,
-    args: [],
-  });
 
-  const dummyRoutine: AgFormatRoutine = (msg) => msg;
-
-  describe('AgLoggerConfig連携', () => {
-    it('AgLoggerConfigでErrorThrowFormatterを自動インスタンス化できる', () => {
+describe('Feature: AgLoggerConfig 連携', () => {
+  describe('When: errorThrow フォーマッタを AgLoggerConfig に設定', () => {
+    it('Then [正常]: AgLoggerConfigでErrorThrowFormatterを自動インスタンス化できる', () => {
       // Arrange
       const config = new AgLoggerConfig();
       const FormatterClass = new MockFormatter.errorThrow();
@@ -58,7 +56,7 @@ describe('MockFormatter.errorThrow - 統合テスト', () => {
       expect(() => formatter(testMessage)).toThrow('Default mock error');
     });
 
-    it('AgLoggerConfig経由でもsetErrorMessageが動作する', () => {
+    it('Then [正常]: AgLoggerConfig経由でもsetErrorMessageが動作する', () => {
       // Arrange
       const config = new AgLoggerConfig();
       const errorThrowFormatter = new MockFormatter.errorThrow();
@@ -83,7 +81,7 @@ describe('MockFormatter.errorThrow - 統合テスト', () => {
       expect(() => config.formatter(testMessage)).toThrow('Runtime changed via config');
     });
 
-    it('AgLoggerConfigの自動インスタンス化でもデフォルトメッセージが設定される', () => {
+    it('Then [正常]: AgLoggerConfigの自動インスタンス化でもデフォルトメッセージが設定される', () => {
       // Arrange
       const config = new AgLoggerConfig();
 
@@ -109,7 +107,7 @@ describe('MockFormatter.errorThrow - 統合テスト', () => {
       expect(() => config.formatter(testMessage)).toThrow('Custom config default message');
     });
 
-    it('複数のAgLoggerConfigインスタンスで独立したerrorThrow設定', () => {
+    it('Then [正常]: 複数のAgLoggerConfigインスタンスで独立したerrorThrow設定', () => {
       // Arrange
       const config1 = new AgLoggerConfig();
       const config2 = new AgLoggerConfig();
@@ -136,9 +134,11 @@ describe('MockFormatter.errorThrow - 統合テスト', () => {
       expect(() => config2.formatter(testMessage)).toThrow('Config 2 error');
     });
   });
+});
 
-  describe('実際のロガー統合', () => {
-    it('AgLoggerでerrorThrowを使用してログ処理をテストできる', () => {
+describe('Feature: 実際のロガー統合', () => {
+  describe('When: errorThrow フォーマッタを実行', () => {
+    it('Then [正常]: AgLoggerでerrorThrowを使用してログ処理をテストできる', () => {
       // Arrange
       const FormatterClass = MockFormatter.errorThrow;
       const instance = new FormatterClass(dummyRoutine);
@@ -155,7 +155,7 @@ describe('MockFormatter.errorThrow - 統合テスト', () => {
       expect(instance.getStats().lastMessage).toEqual(testMessage);
     });
 
-    it('複数のログレベルでerrorThrowの動作を確認', () => {
+    it('Then [正常]: 複数のログレベルでerrorThrowの動作を確認', () => {
       // Arrange
       const FormatterClass = MockFormatter.errorThrow;
       const instance = new FormatterClass(dummyRoutine);
@@ -179,7 +179,7 @@ describe('MockFormatter.errorThrow - 統合テスト', () => {
       expect(instance.getStats().lastMessage).toEqual(infoMessage);
     });
 
-    it('引数付きログメッセージでもerrorThrowが正常動作する', () => {
+    it('Then [正常]: 引数付きログメッセージでもerrorThrowが正常動作する', () => {
       // Arrange
       const FormatterClass = MockFormatter.errorThrow;
       const instance = new FormatterClass(dummyRoutine);
@@ -202,7 +202,7 @@ describe('MockFormatter.errorThrow - 統合テスト', () => {
     // Removed redundant statistical precision test - simple counter operations
     // are adequately tested in other scenarios and don't add significant value
 
-    it('同時実行時の動作確認（統計の整合性）', () => {
+    it('Then [正常]: 同時実行時の動作確認（統計の整合性）', () => {
       // Arrange
       const FormatterClass = MockFormatter.errorThrow;
       const instance = new FormatterClass(dummyRoutine);
@@ -227,9 +227,11 @@ describe('MockFormatter.errorThrow - 統合テスト', () => {
       expect(instance.getStats().lastMessage).toEqual(messages[2]);
     });
   });
+});
 
-  describe('エラーハンドリング統合', () => {
-    it('errorThrowのエラーを外部でキャッチして処理できる', () => {
+describe('Feature: エラーハンドリング統合', () => {
+  describe('When: 例外を外部でキャッチする', () => {
+    it('Then [正常]: errorThrowのエラーを外部でキャッチして処理できる', () => {
       // Arrange
       const FormatterClass = MockFormatter.errorThrow;
       const instance = new FormatterClass(dummyRoutine, 'Integration error test');
@@ -253,7 +255,7 @@ describe('MockFormatter.errorThrow - 統合テスト', () => {
       expect(instance.getStats().lastMessage).toEqual(testMessage);
     });
 
-    it('エラーメッセージ変更後のエラーハンドリング', () => {
+    it('Then [正常]: エラーメッセージ変更後のエラーハンドリング', () => {
       // Arrange
       const FormatterClass = MockFormatter.errorThrow;
       const instance = new FormatterClass(dummyRoutine);
