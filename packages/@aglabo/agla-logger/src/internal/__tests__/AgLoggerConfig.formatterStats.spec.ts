@@ -43,64 +43,29 @@ const createTestMessage = (message = 'Test message'): AgLogMessage => ({
  */
 describe('Feature: Mock Formatter Instance Storage', () => {
   describe('When setting MockFormatter via setLoggerConfig', () => {
-    it('Then [正常]: store instance for AgMockFormatter', () => {
-      // Arrange
-      const config = new AgLoggerConfig();
+    // パラメータ化テスト: 各MockFormatterの共通動作テスト
+    const mockFormatterTestCases = [
+      { name: 'AgMockFormatter', formatter: AgMockFormatter },
+      { name: 'MockFormatter.messageOnly', formatter: MockFormatter.messageOnly },
+      { name: 'MockFormatter.json', formatter: MockFormatter.json },
+      { name: 'MockFormatter.errorThrow', formatter: MockFormatter.errorThrow },
+    ] as const;
 
-      // Act: AgMockFormatterを直接使用
-      const result = config.setLoggerConfig({
-        formatter: AgMockFormatter as AgFormatterInput,
+    mockFormatterTestCases.forEach(({ name, formatter }) => {
+      it(`Then [正常]: store instance for ${name}`, () => {
+        // Arrange
+        const config = new AgLoggerConfig();
+
+        // Act
+        const result = config.setLoggerConfig({
+          formatter: formatter as AgFormatterInput,
+        });
+
+        // Assert: 設定成功とインスタンス保存
+        expect(result).toBe(true);
+        expect(config.hasStatsFormatter()).toBe(true);
+        expect(config.getFormatterStats()).not.toBeNull();
       });
-
-      // Assert: 設定成功とインスタンス保存
-      expect(result).toBe(true);
-      expect(config.hasStatsFormatter()).toBe(true);
-      expect(config.getFormatterStats()).not.toBeNull();
-    });
-
-    it('Then [正常]: store instance for MockFormatter.messageOnly', () => {
-      // Arrange
-      const config = new AgLoggerConfig();
-
-      // Act: MockFormatter.messageOnlyを使用
-      const result = config.setLoggerConfig({
-        formatter: MockFormatter.messageOnly as AgFormatterInput,
-      });
-
-      // Assert: 設定成功とインスタンス保存
-      expect(result).toBe(true);
-      expect(config.hasStatsFormatter()).toBe(true);
-      expect(config.getFormatterStats()).not.toBeNull();
-    });
-
-    it('Then [正常]: store instance for MockFormatter.json', () => {
-      // Arrange
-      const config = new AgLoggerConfig();
-
-      // Act: MockFormatter.jsonを使用
-      const result = config.setLoggerConfig({
-        formatter: MockFormatter.json as AgFormatterInput,
-      });
-
-      // Assert: 設定成功とインスタンス保存
-      expect(result).toBe(true);
-      expect(config.hasStatsFormatter()).toBe(true);
-      expect(config.getFormatterStats()).not.toBeNull();
-    });
-
-    it('Then [正常]: store instance for MockFormatter.errorThrow', () => {
-      // Arrange
-      const config = new AgLoggerConfig();
-
-      // Act: MockFormatter.errorThrowを使用
-      const result = config.setLoggerConfig({
-        formatter: MockFormatter.errorThrow as AgFormatterInput,
-      });
-
-      // Assert: 设定成功とインスタンス保存
-      expect(result).toBe(true);
-      expect(config.hasStatsFormatter()).toBe(true);
-      expect(config.getFormatterStats()).not.toBeNull();
     });
   });
 

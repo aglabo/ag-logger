@@ -11,11 +11,11 @@ import { AG_LOGLEVEL } from '../../../../shared/types';
 import { parseArgsToAgLogMessage } from '../parseArgsToAgLogMessage';
 
 /**
- * Unit tests for the parseArgsToAgLogMessage pure function.
- * This function should replace AgLoggerGetMessage with a pure functional approach.
+ * parseArgsToAgLogMessage pure function comprehensive tests.
+ * BDD format: Given-When-Then structure with unified functionality testing.
  */
-describe('Feature: Basic functionality', () => {
-  describe('When: basic message formatting is performed', () => {
+describe('Given: parseArgsToAgLogMessage pure function', () => {
+  describe('When: processing various argument patterns', () => {
     it('Then [正常]: format basic message with level', () => {
       const result = parseArgsToAgLogMessage(AG_LOGLEVEL.INFO, 'test message');
 
@@ -57,12 +57,8 @@ describe('Feature: Basic functionality', () => {
       expect(result.args).toEqual([userData]);
       expect(Object.isFrozen(result.args)).toBe(true);
     });
-  });
-});
 
-describe('Feature: Pure function properties', () => {
-  describe('When: function immutability is tested', () => {
-    it('Then [正常]: not modify input arguments', () => {
+    it('Then [正常]: maintain immutability of input arguments', () => {
       const originalArgs = ['message', { data: 'test' }];
       const argsCopy = [...originalArgs];
 
@@ -71,14 +67,14 @@ describe('Feature: Pure function properties', () => {
       expect(originalArgs).toEqual(argsCopy);
     });
 
-    it('Then [正常]: return frozen objects', () => {
+    it('Then [正常]: return frozen objects for immutability', () => {
       const result = parseArgsToAgLogMessage(AG_LOGLEVEL.INFO, 'test');
 
       expect(Object.isFrozen(result)).toBe(true);
       expect(Object.isFrozen(result.args)).toBe(true);
     });
 
-    it('Then [正常]: deterministic for same inputs (excl. timestamp)', () => {
+    it('Then [正常]: produce deterministic results for same inputs', () => {
       const result1 = parseArgsToAgLogMessage(AG_LOGLEVEL.INFO, 'test', { data: 'value' });
       const result2 = parseArgsToAgLogMessage(AG_LOGLEVEL.INFO, 'test', { data: 'value' });
 
@@ -86,11 +82,7 @@ describe('Feature: Pure function properties', () => {
       expect(result1.message).toBe(result2.message);
       expect(result1.args).toEqual(result2.args);
     });
-  });
-});
 
-describe('Feature: Complex argument handling', () => {
-  describe('When: mixed argument types are processed', () => {
     it('Then [正常]: handle mixed primitive and object args', () => {
       const result = parseArgsToAgLogMessage(
         AG_LOGLEVEL.WARN,
@@ -105,7 +97,7 @@ describe('Feature: Complex argument handling', () => {
       expect(result.args).toEqual([{ status: 'active' }]);
     });
 
-    it('Then [エッジ]: handle empty arguments', () => {
+    it('Then [エッジ]: handle empty arguments gracefully', () => {
       const result = parseArgsToAgLogMessage(AG_LOGLEVEL.INFO);
 
       expect(result.message).toBe('');
